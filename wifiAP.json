@@ -1,0 +1,20 @@
+{
+  "Device": {
+    "Manufacture": "ESP8266",
+    "Name": "My device",
+    "SerialNumber": "M0J4"
+  },
+  "Configuration": {
+    "WiFiAPPassword": "uGRA9500",
+    "WiFiAPIP": "10.0.0.95",
+    "WiFiAPMask": "255.255.255.0",
+    "WiFiGATEWAY": "10.0.0.0",
+    "WiFiNET": "8.8.8.8",
+    "WiFiCHANNEL": 11,
+    "WiFiClientSSID": "RoutTable",
+    "WiFiHOSTNAME": "ROUTABLE",
+    "WiFiClientPassword": "Network password",
+    "WiFiMode": "Access Point"
+  },
+  "Checksum": "18caE"
+}

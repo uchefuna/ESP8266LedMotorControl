@@ -1,0 +1,146 @@
+<!DOCTYPE HTML>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="author" content="Uchefuna Ezike">
+    <meta name="keywords" content="HTML, CSS, JavaScript">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Micropython WebSocket</title>
+  </head>
+
+  <body style='margin: 1; width: 100%; color: #292a2cee;'>
+    <div style='font-size: 30px;text-align: center;'>Micropython WebSocket Control LED and step motor</div>
+
+    <br/><br/><br/><br/>
+
+    <div style='font-size: 24px;text-align: center;'>Red LED ON/OFF<br/><br/>
+      <input type='button' value='ON' id='rled_on' style='background-color:#88ff88; font-size: 60px;color:red;'
+        onclick='sendRLED(1);' />
+
+      <input type='button' value='OFF' id='rled_off' style='background-color:black; font-size: 60px;color:white;'
+        onclick='sendRLED(0);' />
+
+      <br/><br/>
+
+      <span id='bof'></span>
+    </div>
+
+    <br/>
+    <br/>
+
+    <div style='font-size: 24px;'>Green LED Brightness</div>
+    <br/>
+    <div style='font-size: 24px; color:#00ff00'> G </div><input id='g' type='range' min='0' max='100' step='1' value='0'
+      oninput='sendGLED();' />
+    <br/>
+    <br/>
+    <div style='font-size: 24px;'>Input status</div>
+    <br/>
+    <div style='font-size: 24px;'>A0 pin: </div>
+    <span id='ain'></span>
+    <br/>
+    <div style='font-size: 24px;'>D0 pin: </div>
+    <span id='din'></span>
+    <br/>
+    <br/>
+    <div style='font-size: 24px;'>Sensor Input</div>
+    <br/>
+    <div style='font-size: 24px;'>>Range sensor: </div>
+    <span id='rsn'></span>
+    <br/>
+    <div style='font-size: 3px;'>Temperature: </div>
+    <span id='tmp'></span>
+    <br/>
+    <div style='font-size: 24px;'>Humidity: </div>
+    <span id='hum'></span>
+    <br/>
+    <br/>
+    <div style='font-size: 24px;'>Servo Control</div>
+    <br/>
+    <div>
+      <input id='sctl' type='range' min='-90' max='90' step='1' value='0' oninput='sendSCTL();' />
+    </div>
+    <br/> <br/><br/>
+
+    <div style='font-size: 24px;'>Send message</div>
+    <br/>
+
+    <div>
+      <input type='text' id='msgb' style='font-size: 30px;' />
+      <input type='button' value='Send' id='msnd' style='background-color:black; font-size: 30px;color:white;'
+        onclick='sendMSAG(0);' />
+    </div>
+
+    <script>
+      var chkcnt = 0;
+      var lsetflg = 0;
+      var ssetflg = 0;
+      var connection = new WebSocket('ws://' + location.hostname + ':5000');
+      connection.onopen = function () { connection.send('Connect ' + new Date()); };
+      connection.onerror = function (error) { console.log('WebSocket Error ', error); };
+      connection.onmessage = function (e) {
+        window.setInterval(function () {
+          if (chkcnt == 0) lsetflg = 0;
+          else if (chkcnt == 1) ssetflg = 0;
+          chkcnt++;
+          if (chkcnt > 10) chkcnt = 0;
+        }, 10);                                // every 10mS
+        console.log('Server: ', e.data);
+        if (e.data.substr(0, 5) == 'C-chk') {
+          var cchk = '#C-OK';
+          console.log(cchk);
+          connection.send(cchk);
+        } else if (e.data.substr(0, 7) == 'anread=') {
+          document.all.ain.innerText = e.data.substr(7);
+        } else if (e.data.substr(0, 7) == 'diread=') {
+          document.all.din.innerText = e.data.substr(7);
+        } else if (e.data.substr(0, 7) == 'rnread=') {
+          document.all.rsn.innerText = e.data.substr(7);
+        } else if (e.data.substr(0, 7) == 'tmread=') {
+          document.all.tmp.innerText = e.data.substr(7);
+        } else if (e.data.substr(0, 7) == 'hmread=') {
+          document.all.hum.innerText = e.data.substr(7);
+        } else if (e.data.substr(0, 7) == 'but1onn') {
+          document.all.bof.innerText = 'ON';
+        } else if (e.data.substr(0, 7) == 'but1off') {
+          document.all.bof.innerText = 'OFF';
+        }
+      };
+
+      function sendGLED() {
+        if (!lsetflg) {
+          var g = parseInt(document.getElementById('g').value).toString(10);
+          if (g.length < 2) { g = '0' + g; }
+          var gled = '#GLED:' + g;
+          console.log(gled);
+          connection.send(gled);
+          lsetflg = 1;
+        }
+      }
+      function sendRLED(onflg) {
+        var rled = onflg ? '#RLED:ONN' : '#RLED:OFF';
+        console.log(rled);
+        connection.send(rled);
+      }
+      function sendSCTL() {
+        if (!ssetflg) {
+          var sv = parseInt(document.getElementById('sctl').value).toString(10);
+          var srctl = '#SVCT:' + sv;
+          console.log(srctl);
+          connection.send(srctl);
+          ssetflg = 1;
+        }
+      }
+      function sendMSAG() {
+        var ms = document.getElementById('msgb').value;
+        var smsg = '#MSAG:' + ms;
+        console.log(smsg);
+        connection.send(smsg);
+      }
+
+    </script>
+  </body>
+
+</html>
